@@ -29,7 +29,7 @@ function getExpectedToken(): string | null {
 }
 
 // 認証 Cookie をチェックし、未認証の場合はログインへ誘導
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublicPath(pathname)) {

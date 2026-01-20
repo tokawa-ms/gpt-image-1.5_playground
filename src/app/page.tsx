@@ -1,20 +1,22 @@
 import Link from "next/link";
+import { getServerI18n } from "@/lib/i18n/server";
 
 // ランディングページ
-export default function Home() {
+export default async function Home() {
+  const { t } = await getServerI18n();
+
   return (
     <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
       <section className="rounded-3xl bg-white p-10 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
         {/* ヒーロー領域 */}
         <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-300">
-          Azure AI Foundry
+          {t("home.hero.label")}
         </p>
         <h1 className="mt-4 text-3xl font-semibold leading-tight text-zinc-900 dark:text-white">
-          GPT-Image-1.5 画像編集プレイグラウンド
+          {t("home.hero.title")}
         </h1>
         <p className="mt-4 text-base leading-7 text-zinc-600 dark:text-zinc-300">
-          参照画像をアップロードし、プロンプトと各種オプションを調整して画像編集を実行できます。
-          プロンプトテンプレートもサーバ上のテキストファイルとして管理します。
+          {t("home.hero.description")}
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           {/* CTA */}
@@ -22,13 +24,13 @@ export default function Home() {
             href="/items"
             className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-500"
           >
-            画像編集を開始
+            {t("home.hero.ctaStart")}
           </Link>
           <Link
             href="/about"
             className="rounded-full border border-zinc-300 px-5 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
-            使い方を見る
+            {t("home.hero.ctaGuide")}
           </Link>
         </div>
       </section>
@@ -36,16 +38,16 @@ export default function Home() {
       <section className="space-y-4">
         {[
           {
-            title: "完全な編集オプション",
-            body: "サイズ、品質、入力忠実度、背景、出力形式など全オプションをフォームから指定可能。",
+            title: t("home.cards.editOptions.title"),
+            body: t("home.cards.editOptions.body"),
           },
           {
-            title: "テンプレート管理",
-            body: "prompt-templates ディレクトリの .txt を自動読み込みして即時利用。",
+            title: t("home.cards.templates.title"),
+            body: t("home.cards.templates.body"),
           },
           {
-            title: "Azure 認証",
-            body: "DefaultAzureCredential を利用し、ローカルは Azure CLI、ACA では Managed Identity を想定。",
+            title: t("home.cards.auth.title"),
+            body: t("home.cards.auth.body"),
           },
         ].map((card) => (
           <div

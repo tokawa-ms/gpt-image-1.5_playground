@@ -2,11 +2,13 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
+import { useI18n } from "@/lib/i18n/client";
 
 // 簡易認証用のログインページ
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useI18n();
   // 直前の遷移先があればそこへ戻す
   const nextPath = useMemo(() => {
     const raw = searchParams.get("next");
@@ -34,7 +36,7 @@ export default function LoginPage() {
 
       if (!response.ok) {
         const payload = (await response.json()) as { message?: string };
-        setError(payload.message ?? "ログインに失敗しました。");
+        setError(payload.message ?? t("login.error"));
         return;
       }
 
@@ -42,7 +44,7 @@ export default function LoginPage() {
       router.refresh();
     } catch (error) {
       console.error("Login request failed", error);
-      setError("ログインに失敗しました。");
+      setError(t("login.error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -52,10 +54,10 @@ export default function LoginPage() {
     <div className="mx-auto w-full max-w-md space-y-6">
       <header className="space-y-2 text-center">
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">
-          ログイン
+          {t("login.title")}
         </h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-300">
-          環境変数で設定したユーザー名とパスワードを入力してください。
+          {t("login.description")}
         </p>
       </header>
 
@@ -65,7 +67,7 @@ export default function LoginPage() {
       >
         <div className="space-y-4">
           <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200">
-            ユーザー名
+            {t("login.username")}
             <input
               type="text"
               name="username"
@@ -78,7 +80,7 @@ export default function LoginPage() {
           </label>
 
           <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-200">
-            パスワード
+            {t("login.password")}
             <input
               type="password"
               name="password"
@@ -102,7 +104,7 @@ export default function LoginPage() {
           disabled={isSubmitting}
           className="mt-6 w-full rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {isSubmitting ? "ログイン中..." : "ログイン"}
+          {isSubmitting ? t("login.submitLoading") : t("login.submit")}
         </button>
       </form>
     </div>
