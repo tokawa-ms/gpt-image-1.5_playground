@@ -1,5 +1,7 @@
 # 運用・デプロイ
 
+日本語 | [English](operations-en.md)
+
 ## 環境変数
 
 必須:

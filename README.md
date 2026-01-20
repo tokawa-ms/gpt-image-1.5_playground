@@ -1,5 +1,7 @@
 # GPT-Image-1.5 Playground (Azure AI Foundry)
 
+日本語 | [English](README-en.md)
+
 Azure AI Foundry の GPT-Image-1.5 を使って、参照画像の編集を行うプレイグラウンドアプリです。Next.js (App Router) + TypeScript + Tailwind CSS で構成され、API ルート経由で Azure OpenAI 画像編集 API を呼び出します。
 
 ## 主な機能
