@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n/client";
 
 // テンプレート一覧の最小構造
 type TemplateSummary = {
@@ -22,6 +23,8 @@ const outputFormatOptions = ["png", "jpeg"] as const;
 const inputFidelityOptions = ["low", "medium", "high"] as const;
 
 export default function ItemsPage() {
+  const { t } = useI18n();
+
   // テンプレート・入力値・UI 状態
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
@@ -63,7 +66,7 @@ export default function ItemsPage() {
       try {
         const response = await fetch("/api/templates");
         if (!response.ok) {
-          throw new Error("テンプレート一覧の取得に失敗しました。");
+          throw new Error(t("items.errors.fetchTemplates"));
         }
         const data = (await response.json()) as TemplateSummary[];
         setTemplates(data);
@@ -75,7 +78,7 @@ export default function ItemsPage() {
     }
 
     loadTemplates();
-  }, []);
+  }, [t]);
 
   // 選択したテンプレートを読み込んでプロンプトに反映
   async function handleTemplateLoad(name: string) {
@@ -86,7 +89,7 @@ export default function ItemsPage() {
     try {
       const response = await fetch(`/api/templates/${encodeURIComponent(name)}`);
       if (!response.ok) {
-        throw new Error("テンプレートの読み込みに失敗しました。");
+        throw new Error(t("items.errors.fetchTemplate"));
       }
       const data = (await response.json()) as { name: string; content: string };
       setPrompt(data.content);
@@ -96,7 +99,7 @@ export default function ItemsPage() {
       });
     } catch (err) {
       console.error(err);
-      setError("テンプレートの読み込みに失敗しました。");
+      setError(t("items.errors.fetchTemplate"));
     } finally {
       setPromptLibraryLoading(false);
     }
@@ -109,7 +112,7 @@ export default function ItemsPage() {
 
     // 参照画像が無い場合は即エラー表示
     if (!imageFile) {
-      setError("参照画像を選択してください。");
+      setError(t("items.errors.noImage"));
       return;
     }
 
@@ -147,7 +150,7 @@ export default function ItemsPage() {
       // HTTP エラーはメッセージを取得して表示
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}));
-        throw new Error(errorBody?.message ?? "画像編集に失敗しました。");
+        throw new Error(errorBody?.message ?? t("items.errors.requestFailed"));
       }
 
       const data = (await response.json()) as ImageEditResponse;
@@ -162,7 +165,9 @@ export default function ItemsPage() {
       ]);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : "エラーが発生しました。");
+      setError(
+        err instanceof Error ? err.message : t("items.errors.generic"),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -172,10 +177,10 @@ export default function ItemsPage() {
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">
-          画像編集プレイグラウンド
+          {t("items.title")}
         </h1>
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-          参照画像とマスクをアップロードし、GPT-Image-1.5 の全オプションを指定して編集します。
+          {t("items.description")}
         </p>
       </header>
 
@@ -187,7 +192,7 @@ export default function ItemsPage() {
         <section className="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <div className="space-y-2">
             <label htmlFor="image-file" className="text-sm font-semibold">
-              参照画像 (PNG/JPG)
+              {t("items.form.image")}
             </label>
             <input
               id="image-file"
@@ -202,7 +207,7 @@ export default function ItemsPage() {
           </div>
           <div className="space-y-2">
             <label htmlFor="mask-file" className="text-sm font-semibold">
-              マスク画像 (任意, PNG)
+              {t("items.form.mask")}
             </label>
             <input
               id="mask-file"
@@ -215,13 +220,15 @@ export default function ItemsPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-semibold">プロンプト</label>
+            <label className="text-sm font-semibold">
+              {t("items.form.prompt")}
+            </label>
             <textarea
               ref={promptRef}
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
               rows={6}
-              placeholder="例: 参照画像の背景を夕焼けの海に変更して、中央にビーチボールを追加する"
+              placeholder={t("items.form.promptPlaceholder")}
               className="w-full rounded-xl border border-zinc-200 bg-white p-3 text-sm text-zinc-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"
             />
           </div>
@@ -232,7 +239,7 @@ export default function ItemsPage() {
                 htmlFor="template-select"
                 className="text-xs font-semibold uppercase tracking-wide text-zinc-500"
               >
-                テンプレート
+                {t("items.form.templateLabel")}
               </label>
               <select
                 id="template-select"
@@ -240,7 +247,7 @@ export default function ItemsPage() {
                 onChange={(event) => setSelectedTemplate(event.target.value)}
                 className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"
               >
-                <option value="">選択してください</option>
+                <option value="">{t("items.form.templatePlaceholder")}</option>
                 {templates.map((template) => (
                   <option key={template.name} value={template.name}>
                     {template.name}
@@ -253,7 +260,9 @@ export default function ItemsPage() {
                 disabled={!selectedTemplate || promptLibraryLoading}
                 className="rounded-full bg-zinc-900 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-400"
               >
-                {promptLibraryLoading ? "読み込み中" : "読み込み"}
+                {promptLibraryLoading
+                  ? t("items.form.templateLoading")
+                  : t("items.form.templateLoad")}
               </button>
             </div>
           </div>
@@ -261,11 +270,11 @@ export default function ItemsPage() {
             {/* 詳細オプションは折りたたみ表示 */}
             <details className="rounded-xl border border-zinc-200 p-4 text-sm dark:border-zinc-700">
               <summary className="cursor-pointer text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                画像編集オプション
+                {t("items.form.optionsTitle")}
               </summary>
               <div className="mt-4 grid gap-4">
                 <label className="text-sm font-medium">
-                  モデル
+                  {t("items.form.model")}
                   <input
                     id="model-name"
                     type="text"
@@ -275,7 +284,7 @@ export default function ItemsPage() {
                   />
                 </label>
                 <label className="text-sm font-medium">
-                  サイズ
+                  {t("items.form.size")}
                   <select
                     id="size-select"
                     value={size}
@@ -292,7 +301,7 @@ export default function ItemsPage() {
                   </select>
                 </label>
                 <label className="text-sm font-medium">
-                  品質
+                  {t("items.form.quality")}
                   <select
                     id="quality-select"
                     value={quality}
@@ -311,7 +320,7 @@ export default function ItemsPage() {
                   </select>
                 </label>
                 <label className="text-sm font-medium">
-                  生成枚数 (1-10)
+                  {t("items.form.numberOfImages")}
                   <input
                     id="image-count"
                     type="number"
@@ -325,7 +334,7 @@ export default function ItemsPage() {
                   />
                 </label>
                 <label className="text-sm font-medium">
-                  入力忠実度
+                  {t("items.form.inputFidelity")}
                   <select
                     id="input-fidelity"
                     value={inputFidelity}
@@ -344,7 +353,7 @@ export default function ItemsPage() {
                   </select>
                 </label>
                 <label className="text-sm font-medium">
-                  出力形式
+                  {t("items.form.outputFormat")}
                   <select
                     id="output-format"
                     value={outputFormat}
@@ -363,7 +372,7 @@ export default function ItemsPage() {
                   </select>
                 </label>
                 <label className="text-sm font-medium">
-                  出力圧縮 (0-100)
+                  {t("items.form.outputCompression")}
                   <input
                     id="output-compression"
                     type="number"
@@ -377,7 +386,7 @@ export default function ItemsPage() {
                   />
                 </label>
                 <label className="text-sm font-medium">
-                  背景 (例: transparent)
+                  {t("items.form.background")}
                   <input
                     id="background-value"
                     type="text"
@@ -387,7 +396,7 @@ export default function ItemsPage() {
                   />
                 </label>
                 <label className="text-sm font-medium">
-                  ユーザー ID
+                  {t("items.form.userId")}
                   <input
                     id="user-id"
                     type="text"
@@ -404,7 +413,7 @@ export default function ItemsPage() {
             disabled={isSubmitting}
             className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300"
           >
-            {isSubmitting ? "実行中..." : "画像編集を実行"}
+            {isSubmitting ? t("items.form.submitLoading") : t("items.form.submit")}
           </button>
           {error && (
             <p className="rounded-lg bg-rose-50 p-3 text-xs text-rose-700">
@@ -417,7 +426,7 @@ export default function ItemsPage() {
         <section className="flex h-full flex-col space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <div>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-              生成結果
+              {t("items.results.title")}
             </h2>
           </div>
           {isSubmitting ? (
@@ -439,7 +448,7 @@ export default function ItemsPage() {
               {results.length > 0 && (
                 <div className="space-y-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                    過去の生成結果
+                    {t("items.results.previous")}
                   </p>
                   {/* 以前の結果を一覧表示 */}
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -448,12 +457,18 @@ export default function ItemsPage() {
                         type="button"
                         key={`${src}-${index}`}
                         onClick={() => setSelectedImage(src)}
-                        aria-label={`編集結果 ${index + 1} を拡大表示`}
+                        aria-label={t("items.results.expandLabel").replace(
+                          "{index}",
+                          String(index + 1),
+                        )}
                         className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
                       >
                         <Image
                           src={src}
-                          alt={`編集結果 ${index + 1}`}
+                          alt={t("items.results.expandLabel").replace(
+                            "{index}",
+                            String(index + 1),
+                          )}
                           width={512}
                           height={512}
                           className="h-auto w-full"
@@ -467,7 +482,7 @@ export default function ItemsPage() {
             </div>
           ) : results.length === 0 ? (
             <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-zinc-200 text-sm text-zinc-500 dark:border-zinc-700">
-              まだ結果がありません。
+              {t("items.results.empty")}
             </div>
           ) : (
             // 実行後の結果一覧
@@ -477,12 +492,18 @@ export default function ItemsPage() {
                   type="button"
                   key={`${src}-${index}`}
                   onClick={() => setSelectedImage(src)}
-                  aria-label={`編集結果 ${index + 1} を拡大表示`}
+                  aria-label={t("items.results.expandLabel").replace(
+                    "{index}",
+                    String(index + 1),
+                  )}
                   className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
                 >
                   <Image
                     src={src}
-                    alt={`編集結果 ${index + 1}`}
+                    alt={t("items.results.expandLabel").replace(
+                      "{index}",
+                      String(index + 1),
+                    )}
                     width={512}
                     height={512}
                     className="h-auto w-full"
@@ -503,12 +524,12 @@ export default function ItemsPage() {
             onClick={() => setSelectedImage(null)}
             className="absolute right-6 top-6 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-zinc-800 shadow"
           >
-            閉じる
+            {t("common.close")}
           </button>
           <div className="max-h-full max-w-5xl">
             <Image
               src={selectedImage}
-              alt="拡大表示"
+              alt={t("items.results.expandedAlt")}
               width={1280}
               height={1280}
               className="h-auto w-full rounded-2xl bg-white"
