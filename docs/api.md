@@ -1,5 +1,7 @@
 # API 仕様
 
+日本語 | [English](api-en.md)
+
 ## 共通
 
 - ベース URL: /api
