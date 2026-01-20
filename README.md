@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GPT-Image-1.5 Playground (Azure AI Foundry)
 
-## Getting Started
+Azure AI Foundry の GPT-Image-1.5 を使って、参照画像の編集を行うプレイグラウンドアプリです。Next.js (App Router) + TypeScript + Tailwind CSS で構成され、API ルート経由で Azure OpenAI 画像編集 API を呼び出します。
 
-First, run the development server:
+## 主な機能
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 参照画像とマスク画像を使った画像編集
+- 画像編集 API の主要オプション（size / quality / n / input_fidelity / output_format / output_compression / background）
+- テンプレートライブラリ（prompt-templates ディレクトリの .txt を自動読み込み）
+- 簡易認証（Cookie ベース）と /login 画面
+- ヘルスチェック API（/api/health）
+
+## ドキュメント
+
+- [docs/overview.md](docs/overview.md)
+- [docs/user-guide.md](docs/user-guide.md)
+- [docs/api.md](docs/api.md)
+- [docs/operations.md](docs/operations.md)
+
+## ローカル実行
+
+1. 依存関係のインストール
+
+```
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. 環境変数を準備
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`.env.template` を `.env.local` にコピーし、値を設定します。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. 開発サーバーの起動
 
-## Learn More
+```
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+ブラウザで http://localhost:3000 を開きます。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 画面一覧
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- / : ホーム
+- /items : 画像編集プレイグラウンド
+- /about : 使い方
+- /settings : 環境変数の案内
+- /login : 簡易認証ログイン
 
-## Deploy on Vercel
+## Docker で実行
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+docker build -t gpt-image-playground .
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+docker run -p 3000:3000 --env-file .env.local gpt-image-playground
+```
+
+## Azure Container Apps (ACA) へのデプロイ概要
+
+1. Azure OpenAI (Azure AI Foundry) リソースと GPT-Image-1.5 モデルデプロイを準備します。
+2. Azure Container Registry にイメージをプッシュします。
+3. Azure Container Apps を作成し、Managed Identity を有効化します。
+4. アプリの環境変数に `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_DEPLOYMENT_NAME` / `OPENAI_API_VERSION` を設定します。
+5. Managed Identity に Azure OpenAI へのアクセス権を付与します。
+
+## 環境変数
+
+| 変数                                  | 必須 | 説明                                  |
+| ------------------------------------- | ---- | ------------------------------------- |
+| PORT                                  | 任意 | コンテナの待受ポート (既定 3000)      |
+| NODE_ENV                              | 任意 | `development` または `production`     |
+| AZURE_OPENAI_ENDPOINT                 | 必須 | Azure OpenAI リソースのエンドポイント |
+| AZURE_OPENAI_DEPLOYMENT_NAME          | 必須 | GPT-Image-1.5 のデプロイ名            |
+| OPENAI_API_VERSION                    | 必須 | 例: `2025-04-01-preview`              |
+| AZURE_OPENAI_API_KEY                  | 任意 | キーベース認証が必要な場合のみ        |
+| PROMPT_TEMPLATES_DIR                  | 任意 | テンプレートの保存ディレクトリ        |
+| APPLICATIONINSIGHTS_CONNECTION_STRING | 任意 | Application Insights 用               |
+| AUTH_USERNAME                         | 必須 | 簡易認証のユーザー名                  |
+| AUTH_PASSWORD                         | 必須 | 簡易認証のパスワード                  |
+
+## 簡易認証について
+
+`.env.local` に設定した `AUTH_USERNAME` / `AUTH_PASSWORD` を使用した簡易認証を提供します。未認証の場合は `/login` にリダイレクトされます。
+
+## テンプレートライブラリ
+
+`prompt-templates` ディレクトリに .txt ファイルを配置すると、Playground 画面のテンプレート一覧に自動で表示されます。
+
+## 参照
+
+- Azure OpenAI 画像生成/編集: https://learn.microsoft.com/ja-jp/azure/ai-foundry/openai/how-to/dall-e?view=foundry-classic&tabs=gpt-image-1
+- Azure OpenAI JavaScript 画像生成サンプル: https://learn.microsoft.com/en-us/azure/ai-foundry/openai/dall-e-quickstart?pivots=programming-language-javascript#generate-images-with-dall-e
