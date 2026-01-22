@@ -2,7 +2,11 @@ import { defaultLocale, Locale, messages } from "./messages";
 
 type MessageDictionary = typeof messages[typeof defaultLocale];
 
-type MessageValue = string | Record<string, MessageValue>;
+interface MessageDictionaryNode {
+  [key: string]: MessageValue;
+}
+
+type MessageValue = string | MessageDictionaryNode;
 
 function getDictionary(locale: Locale): MessageDictionary {
   return messages[locale] ?? messages[defaultLocale];
@@ -16,7 +20,7 @@ function getMessageValue(dictionary: MessageDictionary, key: string): string {
     if (typeof current !== "object" || current === null) {
       return key;
     }
-    const next = (current as Record<string, MessageValue>)[segment];
+    const next: MessageValue | undefined = (current as Record<string, MessageValue>)[segment];
     if (next === undefined) {
       return key;
     }

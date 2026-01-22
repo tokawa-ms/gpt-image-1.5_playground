@@ -19,24 +19,33 @@ const envSchema = z.object({
   AUTH_PASSWORD: z.string().min(1),
 });
 
-// 実行時の環境変数をまとめて検証
-const parsed = envSchema.safeParse({
-  AZURE_OPENAI_ENDPOINT: process.env.AZURE_OPENAI_ENDPOINT,
-  AZURE_OPENAI_DEPLOYMENT_NAME: process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
-  OPENAI_API_VERSION: process.env.OPENAI_API_VERSION ?? "2025-04-01-preview",
-  AZURE_OPENAI_API_KEY: process.env.AZURE_OPENAI_API_KEY,
-  PROMPT_TEMPLATES_DIR: process.env.PROMPT_TEMPLATES_DIR,
-  APPLICATIONINSIGHTS_CONNECTION_STRING:
-    process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
-  AUTH_USERNAME: process.env.AUTH_USERNAME,
-  AUTH_PASSWORD: process.env.AUTH_PASSWORD,
-});
+export type Env = z.infer<typeof envSchema>;
 
-// 不足があれば明示的に起動を止める
-if (!parsed.success) {
-  console.error("Environment validation failed", parsed.error.flatten());
-  throw new Error("必要な環境変数が不足しています。README を確認してください。");
+let cachedEnv: Env | null = null;
+
+// 実行時の環境変数を必要になった時点で検証
+export function getEnv(): Env {
+  if (cachedEnv) {
+    return cachedEnv;
+  }
+
+  const parsed = envSchema.safeParse({
+    AZURE_OPENAI_ENDPOINT: process.env.AZURE_OPENAI_ENDPOINT,
+    AZURE_OPENAI_DEPLOYMENT_NAME: process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
+    OPENAI_API_VERSION: process.env.OPENAI_API_VERSION ?? "2025-04-01-preview",
+    AZURE_OPENAI_API_KEY: process.env.AZURE_OPENAI_API_KEY,
+    PROMPT_TEMPLATES_DIR: process.env.PROMPT_TEMPLATES_DIR,
+    APPLICATIONINSIGHTS_CONNECTION_STRING:
+      process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+    AUTH_USERNAME: process.env.AUTH_USERNAME,
+    AUTH_PASSWORD: process.env.AUTH_PASSWORD,
+  });
+
+  if (!parsed.success) {
+    console.error("Environment validation failed", parsed.error.flatten());
+    throw new Error("必要な環境変数が不足しています。README を確認してください。");
+  }
+
+  cachedEnv = parsed.data;
+  return cachedEnv;
 }
-
-// 検証済みの環境変数のみをアプリ全体で利用
-export const env = parsed.data;
