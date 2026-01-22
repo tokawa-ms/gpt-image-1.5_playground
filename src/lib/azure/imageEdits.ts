@@ -1,6 +1,6 @@
 import "server-only";
 import { DefaultAzureCredential } from "@azure/identity";
-import { env } from "@/lib/config/env";
+import { getEnv } from "@/lib/config/env";
 import { cloneFormData } from "@/lib/utils/formData";
 
 // Azure OpenAI (Foundry) のトークンスコープ
@@ -12,6 +12,7 @@ let cachedToken: { token: string; expiresOnTimestamp: number } | null = null;
 
 // Managed Identity / Azure CLI などから AAD トークンを取得
 async function getBearerToken(): Promise<string | null> {
+  const env = getEnv();
   // API Key が設定されている場合は AAD トークンを使わない
   if (env.AZURE_OPENAI_API_KEY) {
     return null;
@@ -38,6 +39,7 @@ async function getBearerToken(): Promise<string | null> {
 
 // 画像編集 API のエンドポイントを組み立てる
 function buildEndpointUrl() {
+  const env = getEnv();
   const endpoint = env.AZURE_OPENAI_ENDPOINT.replace(/\/$/, "");
   return `${endpoint}/openai/deployments/${env.AZURE_OPENAI_DEPLOYMENT_NAME}/images/edits?api-version=${env.OPENAI_API_VERSION}`;
 }
@@ -74,6 +76,7 @@ export async function submitImageEdit(
   entries: Array<[string, FormDataEntryValue]>,
   stream: boolean,
 ): Promise<Response> {
+  const env = getEnv();
   const token = await getBearerToken();
   const headers: HeadersInit = {};
 

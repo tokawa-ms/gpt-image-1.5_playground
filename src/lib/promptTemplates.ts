@@ -1,14 +1,14 @@
 import "server-only";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { env } from "@/lib/config/env";
+import { getEnv } from "@/lib/config/env";
 
 // 既定のテンプレート保存ディレクトリ
 const defaultDir = path.join(process.cwd(), "prompt-templates");
 
 // 環境変数で上書きできるようにする
 function getTemplatesDir(): string {
-  const configured = env.PROMPT_TEMPLATES_DIR?.trim();
+  const configured = getEnv().PROMPT_TEMPLATES_DIR?.trim();
   return configured ? configured : defaultDir;
 }
 
